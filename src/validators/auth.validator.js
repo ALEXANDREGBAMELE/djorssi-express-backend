@@ -34,8 +34,8 @@ const registerSchema = z.object({
   pays: z.string().optional().default('Côte d\'Ivoire'),
   
   // Type d'utilisateur
-  user_type: z.enum(['djorssi', 'employeur'], {
-    errorMap: () => ({ message: 'Le type doit être "djorssi" ou "employeur"' })
+  user_type: z.enum(['djorssi', 'employeur', 'admin'], {
+    errorMap: () => ({ message: 'Le type doit être "djorssi" ou "employeur" ou admin' })
   }),
   
   // Entreprise
