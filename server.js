@@ -23,7 +23,7 @@ const start = async () => {
       logger.info(`🏥 Health check at /health`);
     });
   } catch (error) {
-    logger.error('❌ Failed to start server:', error.message);
+    console.error('❌ Failed to start server:', error.message);
     process.exit(1);
   }
 };
