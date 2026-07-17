@@ -1,4 +1,4 @@
-# render.yaml (version ultime)
+# render.yaml
 services:
   - type: web
     name: djorssi-express-api
@@ -22,6 +22,8 @@ services:
       - key: JWT_SECRET
         generateValue: true
     buildCommand: npm install
+    # ✅ Commande pré-déploiement pour créer les tables
+    preDeployCommand: npm run migrate
     startCommand: npm start
 
   - type: keyvalue

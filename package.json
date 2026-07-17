@@ -17,7 +17,8 @@
     "docker:restart": "docker-compose restart",
     "docker:exec": "docker exec -it djorssi_app sh",
     "docker:psql": "docker exec -it djorssi_postgres psql -U djorssi_user -d djorssi_express_db",
-    "docker:redis": "docker exec -it djorssi_redis redis-cli"
+    "docker:redis": "docker exec -it djorssi_redis redis-cli",
+    "migrate": "node migrate.js"
   },
   "keywords": [],
   "author": "",
