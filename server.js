@@ -14,11 +14,11 @@ const start = async () => {
     await sequelize.authenticate();
     logger.info('✅ Database connection established.');
 
-    // 2. Synchronisation des modèles (uniquement en développement)
-    if (env.nodeEnv === 'development') {
-      await sequelize.sync({ alter: true });
-      logger.info('✅ Database synchronized.');
-    }
+    // 2. ✅ Synchronisation des modèles - TOUJOURS en production
+    // { alter: true } met à jour les tables sans perdre les données
+    // { force: true } recrée les tables (perd les données)
+    await sequelize.sync({ alter: true });
+    logger.info('✅ Database synchronized (tables created/updated)');
 
     // 3. Démarrage du serveur sur 0.0.0.0
     app.listen(PORT, '0.0.0.0', () => {
