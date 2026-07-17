@@ -1,0 +1,27 @@
+# Dockerfile.dev
+FROM node:20-alpine
+
+# Installer les dépendances système
+RUN apk update && \
+    apk add --no-cache \
+    postgresql-client \
+    redis
+
+WORKDIR /app
+
+# Copier les fichiers package
+COPY package*.json ./
+
+# ✅ Installer TOUTES les dépendances (y compris dev)
+RUN npm install && \
+    npm cache clean --force
+
+# Copier le reste des fichiers
+COPY . .
+
+# ✅ Installer nodemon globalement pour le hot-reload
+RUN npm install -g nodemon
+
+EXPOSE 5000
+
+CMD ["npm", "run", "dev"]

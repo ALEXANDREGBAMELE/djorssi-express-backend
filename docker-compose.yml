@@ -1,0 +1,143 @@
+# docker-compose.yml
+version: '3.8'
+
+services:
+  # ====================
+  # POSTGRESQL
+  # ====================
+  postgres:
+    image: postgres:16-alpine
+    container_name: djorssi_postgres
+    environment:
+      POSTGRES_USER: ${DB_USER:-djorssi_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-djorssi123!}
+      POSTGRES_DB: ${DB_NAME:-djorssi_express_db}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      #- ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    networks:
+      - djorssi_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-djorssi_user} -d ${DB_NAME:-djorssi_express_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ====================
+  # REDIS
+  # ====================
+  redis:
+    image: redis:7-alpine
+    container_name: djorssi_redis
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    networks:
+      - djorssi_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ====================
+  # APPLICATION
+  # ====================
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: djorssi_app
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: ${PORT:-5000}
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-djorssi_express_db}
+      DB_USER: ${DB_USER:-djorssi_user}
+      DB_PASSWORD: ${DB_PASSWORD:-djorssi123!}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+    ports:
+      - "${PORT:-5000}:5000"
+    volumes:
+      - ./logs:/app/logs
+      - ./uploads:/app/uploads
+      - ./src:/app/src:ro
+      - ./config:/app/config:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - djorssi_network
+    restart: unless-stopped
+    command: npm start
+
+  # ====================
+  # PGADMIN (optionnel)
+  # ====================
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: djorssi_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@djorssi.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin123}
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    networks:
+      - djorssi_network
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    profiles:
+      - dev
+      - full
+
+  # ====================
+  # REDIS COMMANDER (optionnel)
+  # ====================
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: djorssi_redis_commander
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+    ports:
+      - "${REDIS_COMMANDER_PORT:-8081}:8081"
+    networks:
+      - djorssi_network
+    depends_on:
+      - redis
+    restart: unless-stopped
+    profiles:
+      - dev
+      - full
+
+# ====================
+# VOLUMES
+# ====================
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+# ====================
+# NETWORKS
+# ====================
+networks:
+  djorssi_network:
+    driver: bridge
