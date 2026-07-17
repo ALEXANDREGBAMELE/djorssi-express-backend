@@ -66,7 +66,7 @@ const User = sequelize.define('User', {
   user_type: {
     type: DataTypes.STRING,
     allowNull: false,
-    validate: { isIn: [['djorssi', 'employeur']] },
+    validate: { isIn: [['djorssi', 'employeur','admin']] },
   },
   // Entreprise
   is_company: {
